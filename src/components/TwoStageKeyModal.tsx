@@ -193,7 +193,7 @@ export function TwoStageKeyModal({
         >
           {/* Header */}
           <div className="gl-modal-head">
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
               <span className="dash-ico shrink-0">
                 <HugeiconsIcon icon={SquareLockPasswordIcon} size={18} strokeWidth={1.9} />
               </span>
@@ -261,18 +261,20 @@ export function TwoStageKeyModal({
 
                 <div className="gl-modal-foot">
                   <button
+                    type="button"
                     onClick={onCancel}
                     disabled={processing}
-                    className="gl-modal-btn-ghost flex-1"
+                    className="gl-modal-btn-ghost flex-1 inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {t('twoStageKey.cancelButton', language)}
                   </button>
                   <button
+                    type="button"
                     onClick={handleStage1Next}
                     disabled={
                       (part1.startsWith('0x') ? part1.slice(2) : part1).length < expectedPart1Length || processing
                     }
-                    className="gl-modal-btn-primary flex-1"
+                    className="gl-modal-btn-primary flex-1 inline-flex items-center justify-center px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {processing ? t('twoStageKey.processing', language) : t('twoStageKey.nextButton', language)}
                   </button>
@@ -344,16 +346,18 @@ export function TwoStageKeyModal({
 
                 <div className="gl-modal-foot">
                   <button
+                    type="button"
                     onClick={handleReset}
-                    className="gl-modal-btn-ghost flex-1 flex items-center justify-center gap-1.5"
+                    className="gl-modal-btn-ghost flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold"
                   >
                     <HugeiconsIcon icon={ArrowLeft01Icon} size={16} strokeWidth={1.9} />
                     {t('twoStageKey.backButton', language)}
                   </button>
                   <button
+                    type="button"
                     onClick={handleStage2Complete}
                     disabled={(part2.startsWith('0x') ? part2.slice(2) : part2).length < expectedPart2Length}
-                    className="gl-modal-btn-primary flex-1 flex items-center justify-center gap-1.5"
+                    className="gl-modal-btn-primary flex-1 inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <HugeiconsIcon icon={SquareLockPasswordIcon} size={16} strokeWidth={1.9} />
                     {t('twoStageKey.encryptButton', language)}

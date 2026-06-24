@@ -59,7 +59,7 @@ const T: Record<string, Record<string, string>> = {
   executed: { zh: '已执行', en: 'Executed' },
   selectOrCreate: { zh: '选择或创建辩论', en: 'Select or create a debate' },
   clickToStart: { zh: '点击左侧"开始"启动辩论', en: 'Click "Start" to begin' },
-  waitingAI: { zh: '等待AI发言...', en: 'Waiting for AI...' },
+  waitingAI: { zh: '等待AI发言...', en: 'Waiting for AI to start...' },
   debateFailed: { zh: '辩论失败 - AI模型调用出错。请检查 配置 → AI模型 中的API密钥与模型名称。', en: 'Debate failed - AI provider errors. Check Config → AI Models (API key & model name).' },
   createDebate: { zh: '创建辩论', en: 'Create Debate' },
   debateName: { zh: '辩论名称', en: 'Debate Name' },

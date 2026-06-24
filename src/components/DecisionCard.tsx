@@ -243,6 +243,87 @@ function ActionCard({ action, language, onSymbolClick }: { action: DecisionActio
   )
 }
 
+// Collapsible prompt section — toggle + actions are sibling controls (valid DOM nesting)
+function PromptSection({
+  title,
+  icon,
+  accentColor,
+  accentBg,
+  accentBorder,
+  content,
+  downloadFilename,
+  expanded,
+  onToggle,
+  onCopy,
+  onDownload,
+  language,
+}: {
+  title: string
+  icon: typeof Settings01Icon
+  accentColor: string
+  accentBg: string
+  accentBorder: string
+  content: string
+  expanded: boolean
+  onToggle: () => void
+  onCopy: () => void
+  onDownload: () => void
+  language: Language
+}) {
+  return (
+    <div>
+      <div className="flex items-center gap-2 w-full p-2.5 rounded-lg hover:bg-white/5">
+        <button
+          type="button"
+          onClick={onToggle}
+          className="flex items-center gap-2 flex-1 min-w-0 text-sm text-left transition-colors"
+        >
+          <HugeiconsIcon icon={icon} size={16} strokeWidth={1.9} className="shrink-0" style={{ color: accentColor }} />
+          <span className="font-semibold" style={{ color: accentColor }}>
+            {title}
+          </span>
+          <span
+            className="text-[10px] uppercase tracking-wider px-2 py-1 rounded-md ml-auto"
+            style={{ background: accentBg, color: accentColor }}
+          >
+            {expanded ? t('collapse', language) : t('expand', language)}
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={onCopy}
+          className="text-xs px-2 py-1.5 rounded-md hover:opacity-80 active:scale-95 transition-all flex items-center gap-1 shrink-0"
+          style={{ background: accentBg, color: accentColor, border: `1px solid ${accentBorder}` }}
+          title="Copy to clipboard"
+        >
+          <HugeiconsIcon icon={Copy01Icon} size={14} strokeWidth={1.9} />
+        </button>
+        <button
+          type="button"
+          onClick={onDownload}
+          className="text-xs px-2 py-1.5 rounded-md hover:opacity-80 active:scale-95 transition-all flex items-center gap-1 shrink-0"
+          style={{ background: accentBg, color: accentColor, border: `1px solid ${accentBorder}` }}
+          title="Download as file"
+        >
+          <HugeiconsIcon icon={Download01Icon} size={14} strokeWidth={1.9} />
+        </button>
+      </div>
+      {expanded && (
+        <div
+          className="dash-scroll mt-2 rounded-lg p-4 text-sm font-mono whitespace-pre-wrap max-h-96 overflow-y-auto"
+          style={{
+            background: 'var(--surface-primary)',
+            border: '1px solid var(--panel-border)',
+            color: 'var(--text-secondary)',
+          }}
+        >
+          {content}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export function DecisionCard({ decision, language, onSymbolClick }: DecisionCardProps) {
   const [showSystemPrompt, setShowSystemPrompt] = useState(false)
   const [showInputPrompt, setShowInputPrompt] = useState(false)
@@ -308,120 +389,35 @@ export function DecisionCard({ decision, language, onSymbolClick }: DecisionCard
       <div className="space-y-2">
         {/* System Prompt */}
         {decision.system_prompt && (
-          <div>
-            <button
-              onClick={() => setShowSystemPrompt(!showSystemPrompt)}
-              className="flex items-center gap-2 text-sm transition-colors w-full justify-between p-2.5 rounded-lg hover:bg-white/5"
-            >
-              <div className="flex items-center gap-2">
-                <HugeiconsIcon icon={Settings01Icon} size={16} strokeWidth={1.9} className="shrink-0" style={{ color: '#a78bfa' }} />
-                <span className="font-semibold" style={{ color: '#a78bfa' }}>
-                  System Prompt
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    copyToClipboard(decision.system_prompt, 'System Prompt')
-                  }}
-                  className="text-xs px-2 py-1.5 rounded-md hover:opacity-80 active:scale-95 transition-all flex items-center gap-1"
-                  style={{ background: 'rgba(167, 139, 250, 0.16)', color: '#a78bfa', border: '1px solid rgba(167, 139, 250, 0.3)' }}
-                  title="Copy to clipboard"
-                >
-                  <HugeiconsIcon icon={Copy01Icon} size={14} strokeWidth={1.9} />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    downloadAsFile(decision.system_prompt, `system-prompt-cycle-${decision.cycle_number}.txt`)
-                  }}
-                  className="text-xs px-2 py-1.5 rounded-md hover:opacity-80 active:scale-95 transition-all flex items-center gap-1"
-                  style={{ background: 'rgba(167, 139, 250, 0.16)', color: '#a78bfa', border: '1px solid rgba(167, 139, 250, 0.3)' }}
-                  title="Download as file"
-                >
-                  <HugeiconsIcon icon={Download01Icon} size={14} strokeWidth={1.9} />
-                </button>
-                <span
-                  className="text-[10px] uppercase tracking-wider px-2 py-1 rounded-md"
-                  style={{ background: 'rgba(167, 139, 250, 0.12)', color: '#a78bfa' }}
-                >
-                  {showSystemPrompt ? t('collapse', language) : t('expand', language)}
-                </span>
-              </div>
-            </button>
-            {showSystemPrompt && (
-              <div
-                className="dash-scroll mt-2 rounded-lg p-4 text-sm font-mono whitespace-pre-wrap max-h-96 overflow-y-auto"
-                style={{
-                  background: 'var(--surface-primary)',
-                  border: '1px solid var(--panel-border)',
-                  color: 'var(--text-secondary)',
-                }}
-              >
-                {decision.system_prompt}
-              </div>
-            )}
-          </div>
+          <PromptSection
+            title="System Prompt"
+            icon={Settings01Icon}
+            accentColor="#a78bfa"
+            accentBg="rgba(167, 139, 250, 0.12)"
+            accentBorder="rgba(167, 139, 250, 0.3)"
+            content={decision.system_prompt}
+            expanded={showSystemPrompt}
+            onToggle={() => setShowSystemPrompt(!showSystemPrompt)}
+            onCopy={() => copyToClipboard(decision.system_prompt, 'System Prompt')}
+            onDownload={() => downloadAsFile(decision.system_prompt, `system-prompt-cycle-${decision.cycle_number}.txt`)}
+            language={language}
+          />
         )}
 
-        {/* User/Input Prompt */}
         {decision.input_prompt && (
-          <div>
-            <button
-              onClick={() => setShowInputPrompt(!showInputPrompt)}
-              className="flex items-center gap-2 text-sm transition-colors w-full justify-between p-2.5 rounded-lg hover:bg-white/5"
-            >
-              <div className="flex items-center gap-2">
-                <HugeiconsIcon icon={InboxIcon} size={16} strokeWidth={1.9} className="shrink-0" style={{ color: '#60a5fa' }} />
-                <span className="font-semibold" style={{ color: '#60a5fa' }}>
-                  User Prompt
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    copyToClipboard(decision.input_prompt, 'User Prompt')
-                  }}
-                  className="text-xs px-2 py-1.5 rounded-md hover:opacity-80 active:scale-95 transition-all flex items-center gap-1"
-                  style={{ background: 'rgba(96, 165, 250, 0.16)', color: '#60a5fa', border: '1px solid rgba(96, 165, 250, 0.3)' }}
-                  title="Copy to clipboard"
-                >
-                  <HugeiconsIcon icon={Copy01Icon} size={14} strokeWidth={1.9} />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    downloadAsFile(decision.input_prompt, `user-prompt-cycle-${decision.cycle_number}.txt`)
-                  }}
-                  className="text-xs px-2 py-1.5 rounded-md hover:opacity-80 active:scale-95 transition-all flex items-center gap-1"
-                  style={{ background: 'rgba(96, 165, 250, 0.16)', color: '#60a5fa', border: '1px solid rgba(96, 165, 250, 0.3)' }}
-                  title="Download as file"
-                >
-                  <HugeiconsIcon icon={Download01Icon} size={14} strokeWidth={1.9} />
-                </button>
-                <span
-                  className="text-[10px] uppercase tracking-wider px-2 py-1 rounded-md"
-                  style={{ background: 'rgba(96, 165, 250, 0.12)', color: '#60a5fa' }}
-                >
-                  {showInputPrompt ? t('collapse', language) : t('expand', language)}
-                </span>
-              </div>
-            </button>
-            {showInputPrompt && (
-              <div
-                className="dash-scroll mt-2 rounded-lg p-4 text-sm font-mono whitespace-pre-wrap max-h-96 overflow-y-auto"
-                style={{
-                  background: 'var(--surface-primary)',
-                  border: '1px solid var(--panel-border)',
-                  color: 'var(--text-secondary)',
-                }}
-              >
-                {decision.input_prompt}
-              </div>
-            )}
-          </div>
+          <PromptSection
+            title="User Prompt"
+            icon={InboxIcon}
+            accentColor="#60a5fa"
+            accentBg="rgba(96, 165, 250, 0.12)"
+            accentBorder="rgba(96, 165, 250, 0.3)"
+            content={decision.input_prompt}
+            expanded={showInputPrompt}
+            onToggle={() => setShowInputPrompt(!showInputPrompt)}
+            onCopy={() => copyToClipboard(decision.input_prompt, 'User Prompt')}
+            onDownload={() => downloadAsFile(decision.input_prompt, `user-prompt-cycle-${decision.cycle_number}.txt`)}
+            language={language}
+          />
         )}
 
         {/* AI Thinking */}

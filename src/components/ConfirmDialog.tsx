@@ -4,6 +4,8 @@ import React, {
   useState,
   useCallback,
   useEffect,
+  useMemo,
+  useRef,
 } from 'react'
 import {
   AlertDialog,
@@ -23,8 +25,10 @@ interface ConfirmOptions {
   cancelText?: string
 }
 
+type ConfirmFn = (options: ConfirmOptions) => Promise<boolean>
+
 interface ConfirmDialogContextType {
-  confirm: (options: ConfirmOptions) => Promise<boolean>
+  confirm: ConfirmFn
 }
 
 const ConfirmDialogContext = createContext<
@@ -50,10 +54,11 @@ interface ConfirmState {
   resolve?: (value: boolean) => void
 }
 
-export function ConfirmDialogProvider({
-  children,
+/** Isolated dialog state — opening confirm only re-renders this subtree. */
+function ConfirmDialogHost({
+  confirmRef,
 }: {
-  children: React.ReactNode
+  confirmRef: React.MutableRefObject<ConfirmFn | undefined>
 }) {
   const [state, setState] = useState<ConfirmState>({
     isOpen: false,
@@ -62,7 +67,7 @@ export function ConfirmDialogProvider({
     cancelText: 'Cancel',
   })
 
-  const confirm = useCallback((options: ConfirmOptions): Promise<boolean> => {
+  const confirm = useCallback<ConfirmFn>((options) => {
     return new Promise((resolve) => {
       setState({
         isOpen: true,
@@ -75,10 +80,10 @@ export function ConfirmDialogProvider({
     })
   }, [])
 
-  // 注册全局 confirm 函数
   useEffect(() => {
+    confirmRef.current = confirm
     setGlobalConfirm(confirm)
-  }, [confirm])
+  }, [confirm, confirmRef])
 
   const handleClose = useCallback((result: boolean) => {
     setState((prev) => {
@@ -86,38 +91,61 @@ export function ConfirmDialogProvider({
       return {
         ...prev,
         isOpen: false,
+        resolve: undefined,
       }
     })
   }, [])
 
   return (
-    <ConfirmDialogContext.Provider value={{ confirm }}>
+    <AlertDialog
+      open={state.isOpen}
+      onOpenChange={(open) => !open && handleClose(false)}
+    >
+      <AlertDialogContent>
+        <div className="flex flex-col gap-5 text-center">
+          {state.title && (
+            <AlertDialogTitle className="text-xl">
+              {state.title}
+            </AlertDialogTitle>
+          )}
+          <AlertDialogDescription className="text-[var(--text-primary)] text-base font-medium">
+            {state.message}
+          </AlertDialogDescription>
+        </div>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={() => handleClose(false)}>
+            {state.cancelText}
+          </AlertDialogCancel>
+          <AlertDialogAction onClick={() => handleClose(true)}>
+            {state.okText}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+}
+
+export function ConfirmDialogProvider({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const confirmRef = useRef<ConfirmFn>()
+
+  const contextValue = useMemo<ConfirmDialogContextType>(
+    () => ({
+      confirm: (options) =>
+        confirmRef.current
+          ? confirmRef.current(options)
+          : Promise.resolve(false),
+    }),
+    []
+  )
+
+  return (
+    <ConfirmDialogContext.Provider value={contextValue}>
       {children}
-      <AlertDialog
-        open={state.isOpen}
-        onOpenChange={(open) => !open && handleClose(false)}
-      >
-        <AlertDialogContent>
-          <div className="flex flex-col gap-5 text-center">
-            {state.title && (
-              <AlertDialogTitle className="text-xl">
-                {state.title}
-              </AlertDialogTitle>
-            )}
-            <AlertDialogDescription className="text-[var(--text-primary)] text-base font-medium">
-              {state.message}
-            </AlertDialogDescription>
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => handleClose(false)}>
-              {state.cancelText}
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={() => handleClose(true)}>
-              {state.okText}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialogHost confirmRef={confirmRef} />
     </ConfirmDialogContext.Provider>
   )
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { goTo } from '../lib/nav'
 import useSWR from 'swr'
 import { api } from '../lib/api'
 import type {
@@ -150,7 +150,6 @@ function truncateAddress(address: string, startLen = 6, endLen = 4): string {
 export function AITradersPage({ onTraderSelect }: AITradersPageProps) {
   const { language } = useLanguage()
   const { user, token } = useAuth()
-  const navigate = useNavigate()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showModelModal, setShowModelModal] = useState(false)
@@ -1159,7 +1158,7 @@ export function AITradersPage({ onTraderSelect }: AITradersPageProps) {
                               onTraderSelect(trader.trader_id)
                             } else {
                               const slug = `${trader.trader_name}-${trader.trader_id.slice(0, 4)}`
-                              navigate(`/dashboard?trader=${encodeURIComponent(slug)}`)
+                              goTo(`/dashboard?trader=${encodeURIComponent(slug)}`)
                             }
                           }}
                           className="p-1.5 rounded-lg transition-colors hover:bg-white/10"

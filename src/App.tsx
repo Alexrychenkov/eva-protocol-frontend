@@ -58,6 +58,7 @@ import { ConfirmDialogProvider } from './components/ConfirmDialog'
 import { t } from './i18n/translations'
 import { useSystemConfig } from './hooks/useSystemConfig'
 import { APPKIT_THEME_VARIABLES } from './config/appkitTheme'
+import { goTo, getPageFromPath, PAGE_PATHS, type AppPage } from './lib/nav'
 
 import { OFFICIAL_LINKS } from './constants/branding'
 import type {
@@ -70,40 +71,7 @@ import type {
   Exchange,
 } from './types'
 
-type Page =
-  | 'competition'
-  | 'traders'
-  | 'trader'
-  | 'backtest'
-  | 'strategy'
-  | 'strategy-market'
-  | 'data'
-  | 'debate'
-  | 'faq'
-  | 'login'
-  | 'register'
-  | 'tokenomics'
-  | 'upgrade'
-
-// SINGLE source of truth for path/hash → page. Used by BOTH getInitialPage and
-// the popstate/hashchange handler so the mapping can never diverge (previously
-// two copies disagreed and had no cases for /tokenomics, /upgrade, /docs — so
-// navigating there changed the URL but not the page, and Back appeared broken).
-function getPageFromPath(path: string, hash: string): Page {
-  if (path === '/traders' || hash === 'traders') return 'traders'
-  if (path === '/backtest' || hash === 'backtest') return 'backtest'
-  if (path === '/strategy' || hash === 'strategy') return 'strategy'
-  if (path === '/strategy-market' || hash === 'strategy-market') return 'strategy-market'
-  if (path === '/data' || hash === 'data') return 'data'
-  if (path === '/debate' || hash === 'debate') return 'debate'
-  if (path === '/dashboard' || hash === 'trader' || hash === 'details') return 'trader'
-  if (path === '/tokenomics') return 'tokenomics'
-  if (path === '/upgrade') return 'upgrade'
-  if (path === '/faq' || path === '/docs') return 'faq'
-  if (path === '/login') return 'login'
-  if (path === '/register') return 'register'
-  return 'competition' // default
-}
+type Page = AppPage
 
 function App() {
   const { language, setLanguage } = useLanguage()
@@ -133,40 +101,13 @@ function App() {
     setLoginOverlayOpen(true)
   }
 
-  // Unified page navigation handler
   const navigateToPage = (page: Page) => {
-    const pathMap: Record<Page, string> = {
-      'competition': '/competition',
-      'strategy-market': '/strategy-market',
-      'data': '/data',
-      'traders': '/traders',
-      'trader': '/dashboard',
-      'backtest': '/backtest',
-      'strategy': '/strategy',
-      'debate': '/debate',
-      'faq': '/faq',
-      'login': '/login',
-      'register': '/register',
-      'tokenomics': '/tokenomics',
-      'upgrade': '/upgrade',
-    }
-    const path = pathMap[page]
-    if (path) {
-      window.history.pushState({}, '', path)
-      // startTransition: if the target page's lazy chunk isn't loaded yet, React
-      // keeps the CURRENT page interactive while the chunk loads, then swaps —
-      // instead of freezing the UI on a suspended render (the prod nav bug).
-      startTransition(() => setRoute(path))
-    }
+    const path = PAGE_PATHS[page]
+    if (path) goTo(path)
   }
 
-  // SINGLE source of truth: `route` (the URL pathname) drives everything.
-  // `currentPage` is DERIVED from it, so the two can never desync — which was
-  // the cause of "URL changes but content doesn't" on home/back navigation.
-  const currentPage = getPageFromPath(
-    route,
-    typeof window !== 'undefined' ? window.location.hash.slice(1) : ''
-  )
+  // `route` (pathname) is the single source of truth; page id is derived from it.
+  const currentPage = getPageFromPath(route)
   // 从 URL 参数读取初始 trader 标识（格式: name-id前4位）
   const [selectedTraderSlug, setSelectedTraderSlug] = useState<string | undefined>(() => {
     const params = new URLSearchParams(window.location.search)
@@ -210,10 +151,8 @@ function App() {
       startTransition(() => setRoute(path))
     }
 
-    window.addEventListener('hashchange', handleRouteChange)
     window.addEventListener('popstate', handleRouteChange)
     return () => {
-      window.removeEventListener('hashchange', handleRouteChange)
       window.removeEventListener('popstate', handleRouteChange)
     }
   }, [])
@@ -441,14 +380,15 @@ function App() {
           resetKey={currentPage} clears the error automatically on navigation. */}
       <main className="min-h-screen pt-16">
         <ErrorBoundary name="page" resetKey={currentPage}>
-        <AnimatePresence mode="wait">
+        <AnimatePresence initial={false}>
           <motion.div
             key={currentPage}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
+            transition={{ duration: 0.12, ease: 'easeOut' }}
           >
+            <Suspense fallback={<LoadingScreen fadingOut={false} />}>
             {currentPage === 'competition' ? (
               <CompetitionPage />
             ) : currentPage === 'data' ? (
@@ -459,8 +399,7 @@ function App() {
               <AITradersPage
                 onTraderSelect={(traderId) => {
                   setSelectedTraderId(traderId)
-                  window.history.pushState({}, '', '/dashboard')
-                  startTransition(() => setRoute('/dashboard'))
+                  goTo('/dashboard')
                 }}
               />
             ) : currentPage === 'backtest' ? (
@@ -494,13 +433,11 @@ function App() {
                     window.history.replaceState({}, '', url.toString())
                   }
                 }}
-                onNavigateToTraders={() => {
-                  window.history.pushState({}, '', '/traders')
-                  startTransition(() => setRoute('/traders'))
-                }}
+                onNavigateToTraders={() => goTo('/traders')}
                 exchanges={exchanges}
               />
             )}
+            </Suspense>
           </motion.div>
         </AnimatePresence>
         </ErrorBoundary>

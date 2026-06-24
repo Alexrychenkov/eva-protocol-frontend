@@ -1,19 +1,61 @@
 /**
- * SPA navigation — change the URL WITHOUT a full page reload.
+ * SPA navigation — pathname-only routing (no legacy hash routes).
  *
- * The previous dev navigated with `window.location.href = path`, which reloads
- * the whole 4.9MB bundle (and re-inits the wallet stack) on every tab click —
- * that's what froze the browser, especially while the 3D landing was running.
- *
- * App.tsx already updates its route on `popstate`, so pushing state + firing a
- * synthetic popstate makes it re-render the new page instantly. Leaving the
- * landing this way unmounts the WebGL canvas (freeing the GPU) instead of
- * tearing it down through a reload.
+ * Always use `goTo()` for in-app navigation so App.tsx, BrowserRouter, and
+ * history stay in sync. Do not call pushState + setRoute separately.
  */
+export type AppPage =
+  | 'competition'
+  | 'traders'
+  | 'trader'
+  | 'backtest'
+  | 'strategy'
+  | 'strategy-market'
+  | 'data'
+  | 'debate'
+  | 'faq'
+  | 'login'
+  | 'register'
+  | 'tokenomics'
+  | 'upgrade'
+
+export const PAGE_PATHS: Record<AppPage, string> = {
+  competition: '/competition',
+  'strategy-market': '/strategy-market',
+  data: '/data',
+  traders: '/traders',
+  trader: '/dashboard',
+  backtest: '/backtest',
+  strategy: '/strategy',
+  debate: '/debate',
+  faq: '/faq',
+  login: '/login',
+  register: '/register',
+  tokenomics: '/tokenomics',
+  upgrade: '/upgrade',
+}
+
+/** Map pathname → page id. Hash fragments are ignored (legacy hash routing removed). */
+export function getPageFromPath(pathname: string): AppPage {
+  const path = pathname.split('?')[0] || '/'
+  if (path === '/traders') return 'traders'
+  if (path === '/backtest') return 'backtest'
+  if (path === '/strategy') return 'strategy'
+  if (path === '/strategy-market') return 'strategy-market'
+  if (path === '/data') return 'data'
+  if (path === '/debate') return 'debate'
+  if (path === '/dashboard') return 'trader'
+  if (path === '/tokenomics') return 'tokenomics'
+  if (path === '/upgrade') return 'upgrade'
+  if (path === '/faq' || path === '/docs') return 'faq'
+  if (path === '/login') return 'login'
+  if (path === '/register') return 'register'
+  if (path === '/competition') return 'competition'
+  return 'competition'
+}
+
 export function goTo(path: string): void {
   if (typeof window === 'undefined') return
-  // Always push + fire popstate (even if the URL was already changed by a
-  // react-router navigate() call just before) so App.tsx re-renders the route.
   window.history.pushState({}, '', path)
   window.dispatchEvent(new PopStateEvent('popstate'))
   window.scrollTo({ top: 0 })

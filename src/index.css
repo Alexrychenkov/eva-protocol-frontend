@@ -3863,6 +3863,7 @@ html { -webkit-tap-highlight-color: transparent; }
   justify-content: center;
   width: 32px;
   height: 32px;
+  margin-left: auto;
   border-radius: 9px;
   color: var(--text-tertiary);
   border: 1px solid transparent;
