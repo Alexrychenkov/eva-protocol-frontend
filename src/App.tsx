@@ -57,6 +57,7 @@ import { useAppKitTheme } from '@reown/appkit/react'
 import { ConfirmDialogProvider } from './components/ConfirmDialog'
 import { t } from './i18n/translations'
 import { useSystemConfig } from './hooks/useSystemConfig'
+import { APPKIT_THEME_VARIABLES } from './config/appkitTheme'
 
 import { OFFICIAL_LINKS } from './constants/branding'
 import type {
@@ -113,11 +114,7 @@ function App() {
 
   useEffect(() => {
     setThemeMode('dark')
-    setThemeVariables({
-      '--w3m-color-mix': '#000000',
-      '--w3m-color-mix-strength': 40,
-      '--w3m-accent': '#3d6bff',
-    })
+    setThemeVariables(APPKIT_THEME_VARIABLES)
   }, [setThemeMode, setThemeVariables])
 
   // Debug log + reset the stale-chunk reload guard once the app mounts OK, so a

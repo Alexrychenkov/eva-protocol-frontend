@@ -3,7 +3,7 @@ export const UPGRADE_MIN_EVA_BALANCE = 150_000
 /**
  * Fill this in once the EVA SPL mint is live on Solana mainnet.
  */
-export const EVA_SOLANA_MINT: string = '9HeebAYf3c8PPGXCE4hACkjKe355Q2Du1tJNyNbEpump'
+export const EVA_SOLANA_MINT: string = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxpump'
 
 export const UPGRADE_SUPPORTED_CHAINS = [
   { id: '1', label: 'Ethereum' },

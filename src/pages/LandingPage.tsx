@@ -11,7 +11,9 @@ import ContactsPanel from '../components/ContactsPanel'
 import { useAuth } from '../contexts/AuthContext'
 import { useLanguage } from '../contexts/LanguageContext'
 import { useTheme } from '../contexts/ThemeContext'
-import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
+import { useAppKit } from '@reown/appkit/react'
+import { useAccount, useSwitchChain } from 'wagmi'
+import { DEFAULT_WALLET_NETWORK } from '../config/wallet'
 import { api } from '../lib/api'
 import type { WalletChatSwapIntent } from '../lib/api'
 import { apiUrl } from '../lib/config'
@@ -168,7 +170,16 @@ export function LandingPage() {
   const { theme } = useTheme()
   const isLoggedIn = !!user
   const { open } = useAppKit()
-  const { address: connectedAddress, isConnected } = useAppKitAccount()
+  const { address: connectedAddress, isConnected, chainId } = useAccount()
+  const { switchChainAsync } = useSwitchChain()
+
+  // Landing AI agent is Base-first — nudge connected EVM wallets onto Base.
+  useEffect(() => {
+    if (!isConnected || chainId === DEFAULT_WALLET_NETWORK.id || !switchChainAsync) return
+    switchChainAsync({ chainId: DEFAULT_WALLET_NETWORK.id }).catch(() => {
+      /* user declined or wallet cannot switch */
+    })
+  }, [isConnected, chainId, switchChainAsync])
 
   const [input, setInput] = useState('')
   const [panelOpen, setPanelOpen] = useState(false)
@@ -447,7 +458,15 @@ export function LandingPage() {
         },
       ])
     }
-  }, [language])
+  }, [language, walletAddress])
+
+  const beginWalletAnalysis = useCallback((address: string, userMessage: string) => {
+    setPhase('chat')
+    setWalletAddress(address)
+    setHoldingsMinimized(false)
+    setMessages([{ id: `u-${Date.now()}`, role: 'user', content: userMessage }])
+    startAnalysis(address)
+  }, [startAnalysis])
 
   // ── follow-up chat (wallet context) ────────────────────────────────────────
   const sendChat = useCallback(async (text: string) => {
@@ -529,10 +548,13 @@ export function LandingPage() {
     // Enter chat phase
     setPhase('chat')
 
-    // Only trigger wallet analysis if the resolved message IS the address (or very short sentence containing it).
-    // If the message has other words (e.g. "Send 1 BNB to 0xABC..."), treat as general chat.
-    const isAddressOnly = addr && resolved.trim().replace(addr, '').trim().length < 10
-    if (isAddressOnly) {
+    // Only trigger wallet analysis if the message is address-only, or an explicit
+    // "Analyze my wallet: 0x…" command (not general chat with an address in it).
+    const trailingText = addr ? resolved.trim().replace(addr, '').trim() : ''
+    const isAnalyzeCommand = /^analyze my wallet:/i.test(resolved.trim())
+    const isAddressOnly = addr && (trailingText.length < 10 || isAnalyzeCommand)
+    if (isAddressOnly && addr) {
+      setHoldingsMinimized(false)
       setWalletAddress(addr)
       setMessages([{ id: `u-${Date.now()}`, role: 'user', content: val }])
       startAnalysis(addr)
@@ -621,7 +643,7 @@ export function LandingPage() {
     // "Analyze my wallet" — if wallet already connected use it, else let user type address
     if (cmd.prompt.endsWith(': ')) {
       if (isConnected && connectedAddress) {
-        processInput(`${cmd.prompt}${connectedAddress}`)
+        beginWalletAnalysis(connectedAddress, `${cmd.prompt}${connectedAddress}`)
       } else {
         setInput(cmd.prompt)
         inputRef.current?.focus()
@@ -800,8 +822,8 @@ export function LandingPage() {
                     onClick={() => open()}
                     ariaLabel={isConnected ? 'Wallet connected' : 'Connect wallet'}
                     title={isConnected && connectedAddress
-                      ? `Connected: ${connectedAddress}`
-                      : 'Connect wallet'}
+                      ? `Connected on Base: ${connectedAddress}`
+                      : 'Connect wallet on Base'}
                   >
                     {isConnected
                       ? <PhCheck weight="bold" />
@@ -858,7 +880,7 @@ export function LandingPage() {
 
               {/* Tagline */}
               <p className="text-center text-sm font-semibold tracking-wide mt-8" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                multi-chain · real-time · open source
+                built on Base · multi-chain · real-time · open source
               </p>
             </motion.div>
           </motion.div>

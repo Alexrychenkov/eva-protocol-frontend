@@ -1452,13 +1452,21 @@ tr:hover {
 }
 
 
-/* Reown AppKit modal overrides */
+/* Reown AppKit — EVA dark metal + electric blue (see src/config/appkitTheme.ts) */
 :root {
-  --w3m-color-mix: #000000;
-  --w3m-color-mix-strength: 40;
-  --w3m-accent: #3d6bff;
-  --w3m-background-color: #000000;
-  --w3m-border-radius-master: 3px;
+  --eva-appkit-accent: #3d6bff;
+  --eva-appkit-bg: #050505;
+  --eva-appkit-surface: #0c0d12;
+  --eva-appkit-surface-high: #15171f;
+  --w3m-color-mix: var(--eva-appkit-bg);
+  --w3m-color-mix-strength: 48;
+  --w3m-accent: var(--eva-appkit-accent);
+  --w3m-background-color: var(--eva-appkit-bg);
+  --w3m-border-radius-master: 12px;
+  --apkt-accent: var(--eva-appkit-accent);
+  --apkt-color-mix: var(--eva-appkit-bg);
+  --apkt-color-mix-strength: 48;
+  --apkt-border-radius-master: 12px;
 }
 
 appkit-modal {
@@ -1466,17 +1474,34 @@ appkit-modal {
 }
 
 appkit-modal::part(modal-overlay) {
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(5, 5, 5, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
-w3m-modal, wui-card {
-  --wui-color-bg-125: #000000 !important;
-  --wui-color-bg-150: #0a0a0a !important;
-  --wui-color-bg-175: #111111 !important;
-  --wui-color-fg-accent-010: rgba(61, 107, 255, 0.1) !important;
-  --wui-color-accent-100: #3d6bff !important;
+/* Internal Reown UI tokens — match gl-modal-panel / dashboard chrome */
+w3m-modal,
+wui-card,
+appkit-modal {
+  --wui-color-bg-100: var(--eva-appkit-bg) !important;
+  --wui-color-bg-125: var(--eva-appkit-surface) !important;
+  --wui-color-bg-150: #0a0b10 !important;
+  --wui-color-bg-175: var(--eva-appkit-surface-high) !important;
+  --wui-color-bg-200: #111219 !important;
+  --wui-color-fg-100: #ffffff !important;
+  --wui-color-fg-125: rgba(255, 255, 255, 0.82) !important;
+  --wui-color-fg-150: rgba(255, 255, 255, 0.62) !important;
+  --wui-color-fg-175: rgba(255, 255, 255, 0.45) !important;
+  --wui-color-fg-200: rgba(255, 255, 255, 0.32) !important;
+  --wui-color-fg-300: rgba(255, 255, 255, 0.22) !important;
+  --wui-color-accent-100: var(--eva-appkit-accent) !important;
+  --wui-color-accent-090: #6189ff !important;
+  --wui-color-fg-accent-010: rgba(61, 107, 255, 0.12) !important;
+  --wui-color-fg-accent-020: rgba(61, 107, 255, 0.22) !important;
+  --wui-border-radius-m: 12px !important;
+  --wui-border-radius-xs: 8px !important;
+  --wui-color-success-100: #22c55e !important;
+  --wui-color-error-100: #ef4444 !important;
 }
 
 .scrollbar-hide::-webkit-scrollbar { display: none; }
@@ -2337,11 +2362,6 @@ html:has(.eva-loader) {
   color: #ffffff !important;
   background: rgba(255, 255, 255, 0.08) !important;
   transform: scale(1.1);
-}
-
-/* AppKit modal accents → chrome/electric */
-w3m-modal, wui-card {
-  --wui-color-accent-100: #3d6bff !important;
 }
 
 /* ════════════════════════════════════════════════════════════════════════
