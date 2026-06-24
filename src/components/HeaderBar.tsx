@@ -2,13 +2,15 @@ import { useState, useEffect, useRef, useCallback, type MouseEvent } from 'react
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowDown01Icon, Logout01Icon } from '@hugeicons/core-free-icons'
+import { ArrowDown01Icon, Logout01Icon, Settings02Icon } from '@hugeicons/core-free-icons'
 import { t, type Language } from '../i18n/translations'
 import { useSystemConfig } from '../hooks/useSystemConfig'
 import { OFFICIAL_LINKS } from '../constants/branding'
 import { useTheme } from '../contexts/ThemeContext'
 import { goTo } from '../lib/nav'
+import { useAccountUiStore } from '../stores/accountUiStore'
 import { DesktopNav, MobileNav } from './nav/NavMenu'
+import { SettingsModal } from './SettingsModal'
 import type { NavLeaf, NavPage } from './nav/navConfig'
 
 type Page =
@@ -51,6 +53,9 @@ export default function HeaderBar({
 }: HeaderBarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userDropdownOpen, setUserDropdownOpen] = useState(false)
+  const settingsOpen = useAccountUiStore((s) => s.settingsOpen)
+  const openSettings = useAccountUiStore((s) => s.openSettings)
+  const closeSettings = useAccountUiStore((s) => s.closeSettings)
   const userDropdownRef = useRef<HTMLDivElement>(null)
   const { config: systemConfig } = useSystemConfig()
   const registrationEnabled = systemConfig?.registration_enabled !== false
@@ -212,13 +217,25 @@ export default function HeaderBar({
                       </div>
                     </div>
                     {onLogout && (
-                      <button
-                        onClick={() => { onLogout(); setUserDropdownOpen(false) }}
-                        className="gl-user-logout"
-                      >
-                        <HugeiconsIcon icon={Logout01Icon} size={17} strokeWidth={1.9} />
-                        {t('exitLogin', language)}
-                      </button>
+                      <>
+                        <button
+                          onClick={() => {
+                            openSettings()
+                            setUserDropdownOpen(false)
+                          }}
+                          className="gl-user-menu-item"
+                        >
+                          <HugeiconsIcon icon={Settings02Icon} size={17} strokeWidth={1.9} />
+                          {isEn ? 'Settings' : '设置'}
+                        </button>
+                        <button
+                          onClick={() => { onLogout(); setUserDropdownOpen(false) }}
+                          className="gl-user-logout"
+                        >
+                          <HugeiconsIcon icon={Logout01Icon} size={17} strokeWidth={1.9} />
+                          {t('exitLogin', language)}
+                        </button>
+                      </>
                     )}
                   </div>
                 )}
@@ -295,19 +312,32 @@ export default function HeaderBar({
                 {/* Auth */}
                 <div className="mb-5">
                   {isLoggedIn && user ? (
-                    <div className="gl-user-trigger" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', padding: '8px 10px', cursor: 'default' }}>
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <span className="gl-user-avatar" style={{ width: 34, height: 34, borderRadius: 10, fontSize: 14 }}>
-                          {user.email[0].toUpperCase()}
-                        </span>
-                        <span className="gl-user-email" style={{ maxWidth: 170, fontSize: 13.5 }}>
-                          {user.email}
-                        </span>
+                    <div className="space-y-2">
+                      <div
+                        className="gl-user-trigger"
+                        style={{ display: 'flex', width: '100%', padding: '8px 10px', cursor: 'default' }}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className="gl-user-avatar" style={{ width: 34, height: 34, borderRadius: 10, fontSize: 14 }}>
+                            {user.email[0].toUpperCase()}
+                          </span>
+                          <span className="gl-user-email" style={{ maxWidth: 170, fontSize: 13.5 }}>
+                            {user.email}
+                          </span>
+                        </div>
                       </div>
+                      <button
+                        onClick={() => { openSettings(); setMobileMenuOpen(false) }}
+                        className="gl-user-menu-item"
+                        style={{ borderRadius: 10, borderBottom: 'none' }}
+                      >
+                        <HugeiconsIcon icon={Settings02Icon} size={16} strokeWidth={1.9} />
+                        {isEn ? 'Settings' : '设置'}
+                      </button>
                       <button
                         onClick={() => { onLogout?.(); setMobileMenuOpen(false) }}
                         className="gl-user-logout"
-                        style={{ width: 'auto', padding: '8px 12px', borderRadius: 10 }}
+                        style={{ borderRadius: 10 }}
                       >
                         <HugeiconsIcon icon={Logout01Icon} size={16} strokeWidth={1.9} />
                         {t('exitLogin', language)}
@@ -377,6 +407,12 @@ export default function HeaderBar({
           </motion.div>
         )}
       </AnimatePresence>
+
+      <SettingsModal
+        isOpen={settingsOpen}
+        onClose={closeSettings}
+        language={language}
+      />
     </>
   )
 }

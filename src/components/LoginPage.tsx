@@ -8,6 +8,7 @@ import { useSystemConfig } from '../hooks/useSystemConfig'
 import Strands from './three/Strands'
 import LiquidMetalBar from './LiquidMetalBar'
 import { ErrorBoundary } from './ErrorBoundary'
+import { OtpQrCode } from './OtpQrCode'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Mail01Icon, LockPasswordIcon, Activity03Icon } from '@hugeicons/core-free-icons'
 
@@ -43,7 +44,6 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [otpCode, setOtpCode] = useState('')
   const [userID, setUserID] = useState('')
-  const [qrCodeURL, setQrCodeURL] = useState('')
   const [otpSecret, setOtpSecret] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -86,28 +86,19 @@ export function LoginPage() {
     if (result.success) {
       if (result.requiresOTPSetup && result.userID) {
         setUserID(result.userID)
-        setQrCodeURL(result.qrCodeURL || '')
         setOtpSecret(result.otpSecret || '')
         setStep('setup-otp')
         toast.info('Pending 2FA setup detected. Please complete configuration.')
       } else if (result.requiresOTP && result.userID) {
         setUserID(result.userID)
-        if (result.qrCodeURL) {
-          setQrCodeURL(result.qrCodeURL)
-          setOtpSecret(result.otpSecret || '')
-          setStep('setup-otp')
-          toast.info('Pending 2FA setup detected. Please complete configuration.')
-        } else {
-          setStep('otp')
-        }
+        setStep('otp')
       } else {
         if (expiredToastId) toast.dismiss(expiredToastId)
       }
     } else {
-      if (result.qrCodeURL) {
+      if (result.otpSecret) {
         setUserID(result.userID || '')
-        setQrCodeURL(result.qrCodeURL)
-        setOtpSecret(result.otpSecret || '')
+        setOtpSecret(result.otpSecret)
         setStep('setup-otp')
         toast.warning(t('completeGapSetup', language) || 'Incomplete setup detected. Please configure 2FA.')
       } else {
@@ -123,7 +114,7 @@ export function LoginPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
-    const result = qrCodeURL
+    const result = otpSecret
       ? await completeRegistration(userID, otpCode)
       : await verifyOTP(userID, otpCode)
 
@@ -133,7 +124,6 @@ export function LoginPage() {
       toast.error(msg)
     } else {
       if (expiredToastId) toast.dismiss(expiredToastId)
-      setQrCodeURL('')
       setOtpSecret('')
     }
     setLoading(false)
@@ -326,17 +316,7 @@ export function LoginPage() {
                     <p className="text-xs font-mono tracking-wider mb-5" style={{ color: 'rgba(255,255,255,0.5)' }}>
                       {language === 'zh' ? '完成两步验证配置' : 'COMPLETE 2FA CONFIGURATION'}
                     </p>
-                    {qrCodeURL ? (
-                      <div className="inline-block p-3 rounded-xl bg-white mx-auto mb-4">
-                        <img
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(`otpauth://totp/${encodeURIComponent(email)}?secret=${otpSecret}&issuer=EVA`)}`}
-                          alt="QR Code"
-                          className="w-36 h-36"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-36 h-36 mx-auto rounded-xl animate-pulse mb-4" style={{ background: 'rgba(255,255,255,0.06)' }} />
-                    )}
+                    <OtpQrCode email={email} secret={otpSecret} />
                     <p className="text-[11px] font-mono mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>
                       {language === 'zh' ? '备用密钥' : 'BACKUP SECRET KEY'}
                     </p>

@@ -621,6 +621,8 @@ export const translations = {
     copyIP: 'Copy',
     ipCopied: 'IP Copied',
     copyIPFailed: 'Failed to copy IP address. Please copy manually',
+    copiedToClipboard: 'Copied to clipboard',
+    copyFailed: 'Copy failed',
     loadingServerIP: 'Loading server IP...',
 
     // Error Messages
@@ -1137,6 +1139,8 @@ export const translations = {
       backButton: 'Back',
       encryptButton: 'Encrypt & Submit',
       obfuscationCopied: 'Obfuscation data copied to clipboard',
+      obfuscationCopyFailed: 'Copy failed — paste the obfuscation string manually',
+      clipboardNotSupported: 'Automatic copy is not supported — copy manually',
       obfuscationInstruction:
         'Paste something else to clear clipboard, then continue',
       obfuscationManual: 'Manual obfuscation required',
@@ -1855,6 +1859,8 @@ export const translations = {
     copyIP: '复制',
     ipCopied: 'IP已复制',
     copyIPFailed: 'IP地址复制失败，请手动复制',
+    copiedToClipboard: '已复制到剪贴板',
+    copyFailed: '复制失败',
     loadingServerIP: '正在加载服务器IP...',
 
     // Error Messages
@@ -2345,6 +2351,8 @@ export const translations = {
       backButton: '返回',
       encryptButton: '加密并提交',
       obfuscationCopied: '混淆数据已复制到剪贴板',
+      obfuscationCopyFailed: '复制失败，请手动复制混淆字符串',
+      clipboardNotSupported: '当前浏览器不支持自动复制，请手动复制',
       obfuscationInstruction: '请粘贴其他内容清空剪贴板，然后继续',
       obfuscationManual: '需要手动混淆',
     },

@@ -1,6 +1,9 @@
 import { createContext, useContext, useState, ReactNode } from 'react'
 import type { Language } from '../i18n/translations'
 
+/** App-wide UI language. EVA Protocol is English-first. */
+export const DEFAULT_LANGUAGE: Language = 'en'
+
 interface LanguageContextType {
   language: Language
   setLanguage: (lang: Language) => void
@@ -11,16 +14,23 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
 )
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  // Initialize language from localStorage or default to English
   const [language, setLanguage] = useState<Language>(() => {
-    const saved = localStorage.getItem('language')
-    return saved === 'en' || saved === 'zh' ? saved : 'en'
+    // Always English — ignore any legacy `language=zh` in localStorage.
+    try {
+      localStorage.setItem('language', DEFAULT_LANGUAGE)
+    } catch {
+      /* ignore */
+    }
+    return DEFAULT_LANGUAGE
   })
 
-  // Save language to localStorage whenever it changes
   const handleSetLanguage = (lang: Language) => {
     setLanguage(lang)
-    localStorage.setItem('language', lang)
+    try {
+      localStorage.setItem('language', lang)
+    } catch {
+      /* ignore */
+    }
   }
 
   return (

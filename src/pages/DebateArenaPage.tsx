@@ -75,6 +75,10 @@ const T: Record<string, Record<string, string>> = {
   selectTrader: { zh: '选择交易员', en: 'Select Trader' },
   executing: { zh: '执行中...', en: 'Executing...' },
   fillNameAdd2AI: { zh: '请填写名称并添加至少2个AI', en: 'Please fill name and add at least 2 AI' },
+  createSuccess: { zh: '创建成功', en: 'Created successfully' },
+  startSuccess: { zh: '已开始', en: 'Debate started' },
+  deleteSuccess: { zh: '已删除', en: 'Deleted' },
+  executeSuccess: { zh: '已执行', en: 'Executed' },
 }
 const t = (key: string, lang: string) => T[key]?.[lang] || T[key]?.en || key
 
@@ -652,20 +656,20 @@ export function DebateArenaPage() {
 
   const onCreate = async (r: CreateDebateRequest) => {
     const d = await api.createDebate(r)
-    notify.success('创建成功')
+    notify.success(t('createSuccess', language))
     mutateList()
     setSelectedId(d.id)
   }
 
   const onStart = async (id: string) => {
     await api.startDebate(id)
-    notify.success('已开始')
+    notify.success(t('startSuccess', language))
     mutateList(); mutateDetail()
   }
 
   const onDelete = async (id: string) => {
     await api.deleteDebate(id)
-    notify.success('已删除')
+    notify.success(t('deleteSuccess', language))
     if (selectedId === id) setSelectedId(null)
     mutateList()
   }
@@ -675,7 +679,7 @@ export function DebateArenaPage() {
     setExecuting(true)
     try {
       await api.executeDebate(execId, traderId)
-      notify.success('已执行')
+      notify.success(t('executeSuccess', language))
       mutateDetail(); mutateList()
       setExecId(null); setTraderId('')
     } catch (e: any) { notify.error(e.message) }

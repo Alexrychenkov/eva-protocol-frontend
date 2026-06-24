@@ -51,6 +51,7 @@ interface AuthContextType {
     userID?: string
     otpSecret?: string
     qrCodeURL?: string
+    completed?: boolean
   }>
   verifyOTP: (
     userID: string,
@@ -58,8 +59,20 @@ interface AuthContextType {
   ) => Promise<{ success: boolean; message?: string }>
   completeRegistration: (
     userID: string,
-    otpCode: string
+    otpCode: string,
+    options?: { redirect?: boolean }
   ) => Promise<{ success: boolean; message?: string }>
+  setupOTP: () => Promise<{
+    success: boolean
+    message?: string
+    otpSecret?: string
+  }>
+  getAccountSecurity: () => Promise<{
+    success: boolean
+    message?: string
+    email?: string
+    otpEnabled?: boolean
+  }>
   resetPassword: (
     email: string,
     newPassword: string,
@@ -142,6 +155,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+  const persistAuthSession = (data: { token: string; user_id: string; email: string }) => {
+    reset401Flag()
+
+    const userInfo = { id: data.user_id, email: data.email }
+    setToken(data.token)
+    setUser(userInfo)
+    localStorage.setItem('auth_token', data.token)
+    localStorage.setItem('auth_user', JSON.stringify(userInfo))
+
+    const redirect = getPostAuthRedirect()
+    window.history.pushState({}, '', redirect)
+    window.dispatchEvent(new PopStateEvent('popstate'))
+  }
+
+  const updateAuthSession = (data: { token?: string; user_id: string; email: string }) => {
+    reset401Flag()
+
+    const userInfo = { id: data.user_id, email: data.email }
+    if (data.token) {
+      setToken(data.token)
+      localStorage.setItem('auth_token', data.token)
+    }
+    setUser(userInfo)
+    localStorage.setItem('auth_user', JSON.stringify(userInfo))
+  }
+
   const login = async (email: string, password: string) => {
     try {
       const response = await fetch(apiUrl('/api/login'), {
@@ -155,6 +194,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json()
 
       if (response.ok) {
+        if (data.token) {
+          persistAuthSession(data)
+          return { success: true }
+        }
+
         // Check for OTP setup required (incomplete registration)
         if (data.requires_otp_setup) {
           return {
@@ -244,18 +288,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const result = await httpClient.post<{
         user_id: string
-        otp_secret: string
-        qr_code_url: string
+        email: string
+        token?: string
+        otp_secret?: string
+        qr_code_url?: string
         message: string
       }>('/api/register', requestBody)
 
       if (result.success && result.data) {
+        if (result.data.token) {
+          persistAuthSession({
+            token: result.data.token,
+            user_id: result.data.user_id,
+            email: result.data.email,
+          })
+          return {
+            success: true,
+            completed: true,
+            message: result.message || result.data.message,
+          }
+        }
+
+        if (result.data.otp_secret) {
+          return {
+            success: true,
+            userID: result.data.user_id,
+            otpSecret: result.data.otp_secret,
+            qrCodeURL: result.data.qr_code_url,
+            message: result.message || result.data.message,
+          }
+        }
+
         return {
-          success: true,
-          userID: result.data.user_id,
-          otpSecret: result.data.otp_secret,
-          qrCodeURL: result.data.qr_code_url,
-          message: result.message || result.data.message,
+          success: false,
+          message: result.message || result.data.message || 'Registration failed',
         }
       }
 
@@ -289,20 +355,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json()
 
       if (response.ok) {
-        // Reset 401 flag on successful login
-        reset401Flag()
-
-        // Login successful, save token and user info
-        const userInfo = { id: data.user_id, email: data.email }
-        setToken(data.token)
-        setUser(userInfo)
-        localStorage.setItem('auth_token', data.token)
-        localStorage.setItem('auth_user', JSON.stringify(userInfo))
-
-        const redirect = getPostAuthRedirect()
-        window.history.pushState({}, '', redirect)
-        window.dispatchEvent(new PopStateEvent('popstate'))
-
+        persistAuthSession(data)
         return { success: true, message: data.message }
       } else {
         return { success: false, message: data.error }
@@ -312,7 +365,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const completeRegistration = async (userID: string, otpCode: string) => {
+  const completeRegistration = async (
+    userID: string,
+    otpCode: string,
+    options?: { redirect?: boolean }
+  ) => {
     try {
       const response = await fetch(apiUrl('/api/complete-registration'), {
         method: 'POST',
@@ -325,26 +382,74 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json()
 
       if (response.ok) {
-        // Reset 401 flag on successful login
-        reset401Flag()
-
-        // Registration complete, auto-login
-        const userInfo = { id: data.user_id, email: data.email }
-        setToken(data.token)
-        setUser(userInfo)
-        localStorage.setItem('auth_token', data.token)
-        localStorage.setItem('auth_user', JSON.stringify(userInfo))
-
-        const redirect = getPostAuthRedirect()
-        window.history.pushState({}, '', redirect)
-        window.dispatchEvent(new PopStateEvent('popstate'))
-
+        if (options?.redirect === false) {
+          updateAuthSession(data)
+        } else {
+          persistAuthSession(data)
+        }
         return { success: true, message: data.message }
       } else {
         return { success: false, message: data.error }
       }
     } catch (error) {
       return { success: false, message: 'Registration failed, please try again' }
+    }
+  }
+
+  const setupOTP = async () => {
+    try {
+      const result = await httpClient.post<{
+        user_id: string
+        email: string
+        otp_secret: string
+        qr_code_url: string
+        message: string
+      }>('/api/setup-otp')
+
+      if (result.success && result.data?.otp_secret) {
+        return {
+          success: true,
+          otpSecret: result.data.otp_secret,
+          message: result.message || result.data.message,
+        }
+      }
+
+      return {
+        success: false,
+        message: result.message || 'Failed to start two-factor setup',
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to start two-factor setup',
+      }
+    }
+  }
+
+  const getAccountSecurity = async () => {
+    try {
+      const result = await httpClient.get<{
+        email: string
+        otp_enabled: boolean
+      }>('/api/account/security')
+
+      if (result.success && result.data) {
+        return {
+          success: true,
+          email: result.data.email,
+          otpEnabled: result.data.otp_enabled,
+        }
+      }
+
+      return {
+        success: false,
+        message: result.message || 'Failed to load account security settings',
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to load account security settings',
+      }
     }
   }
 
@@ -404,6 +509,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         register,
         verifyOTP,
         completeRegistration,
+        setupOTP,
+        getAccountSecurity,
         resetPassword,
         logout,
         isLoading,

@@ -3049,6 +3049,56 @@ w3m-modal, wui-card {
   .gl-glow-border::after { animation: none; }
 }
 
+/* compact accent CTA — animated aurora-style glow ring for setup actions (Add model/exchange) */
+.gl-accent-glow-btn {
+  position: relative;
+  isolation: isolate;
+  color: var(--accent-primary);
+  background: var(--accent-primary-bg);
+  border: 1px solid transparent;
+  box-shadow:
+    inset 0 0 14px rgba(61, 107, 255, 0.1),
+    0 0 12px rgba(61, 107, 255, 0.12);
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.gl-accent-glow-btn > * { position: relative; z-index: 1; }
+.gl-accent-glow-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: conic-gradient(from var(--gl-bd-angle) at 50% 50%,
+    rgba(255, 255, 255, 0.05) 0deg,
+    rgba(135, 168, 255, 0.55) 30deg,
+    rgba(255, 255, 255, 0.05) 82deg,
+    rgba(0, 0, 0, 0.30) 160deg,
+    rgba(255, 255, 255, 0.05) 232deg,
+    rgba(150, 120, 255, 0.40) 300deg,
+    rgba(255, 255, 255, 0.05) 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  filter: drop-shadow(0 0 3px rgba(61, 107, 255, 0.45));
+  animation: gl-border-spin 9s linear infinite, gl-glow-breathe 4.5s ease-in-out infinite;
+  z-index: 0;
+}
+.gl-accent-glow-btn:hover {
+  background: rgba(61, 107, 255, 0.14);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 0 18px rgba(61, 107, 255, 0.14),
+    0 0 18px rgba(61, 107, 255, 0.22);
+}
+.gl-accent-glow-btn:hover::before {
+  filter: drop-shadow(0 0 6px rgba(61, 107, 255, 0.6));
+}
+@media (prefers-reduced-motion: reduce) {
+  .gl-accent-glow-btn::before { animation: none; }
+}
+
 /* premium modal buttons (used by the sign-in overlay + login) */
 .gl-modal-btn-primary {
   background: linear-gradient(180deg, #4f7bff 0%, #3d6bff 100%);
@@ -3263,6 +3313,25 @@ html { -webkit-tap-highlight-color: transparent; }
 .gl-user-menu-head .gl-user-avatar { width: 38px; height: 38px; border-radius: 11px; font-size: 15px; }
 .gl-user-menu-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-tertiary); }
 .gl-user-menu-email { font-size: 13px; font-weight: 600; color: var(--text-primary); max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.gl-user-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.gl-user-menu-item:hover {
+  background: linear-gradient(180deg, rgba(61, 107, 255, 0.12) 0%, rgba(61, 107, 255, 0.04) 100%);
+  color: #dbe4ff;
+}
 
 .gl-user-logout {
   display: flex;

@@ -907,8 +907,7 @@ export function AITradersPage({ onTraderSelect }: AITradersPageProps) {
               right={
                 <button
                   onClick={handleAddModel}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/5"
-                  style={{ color: 'var(--accent-primary)', background: 'var(--accent-primary-bg)', border: '1px solid var(--accent-primary-border)' }}
+                  className="gl-accent-glow-btn inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg"
                 >
                   <HugeiconsIcon icon={Add01Icon} size={13} strokeWidth={2.2} />
                   {language === 'zh' ? '添加' : 'Add'}
@@ -973,8 +972,7 @@ export function AITradersPage({ onTraderSelect }: AITradersPageProps) {
               right={
                 <button
                   onClick={handleAddExchange}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors hover:bg-white/5"
-                  style={{ color: 'var(--accent-primary)', background: 'var(--accent-primary-bg)', border: '1px solid var(--accent-primary-border)' }}
+                  className="gl-accent-glow-btn inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg"
                 >
                   <HugeiconsIcon icon={Add01Icon} size={13} strokeWidth={2.2} />
                   {language === 'zh' ? '添加' : 'Add'}

@@ -6,6 +6,7 @@ import { api } from './lib/api'
 import { LoginRequiredOverlay } from './components/LoginRequiredOverlay'
 import { LoadingScreen } from './components/LoadingScreen'
 import HeaderBar from './components/HeaderBar'
+import { OnboardingDialog } from './components/OnboardingDialog'
 import { ErrorBoundary } from './components/ErrorBoundary'
 
 // ── Every page is lazy-loaded (code-split) so the initial bundle is small and
@@ -572,6 +573,8 @@ function App() {
         onClose={() => setLoginOverlayOpen(false)}
         featureName={loginOverlayFeature}
       />
+
+      <OnboardingDialog language={language} />
     </div>
   )
 }

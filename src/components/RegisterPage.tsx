@@ -12,6 +12,7 @@ import { WhitelistFullPage } from './WhitelistFullPage'
 import Strands from './three/Strands'
 import LiquidMetalBar from './LiquidMetalBar'
 import { ErrorBoundary } from './ErrorBoundary'
+import { OtpQrCode } from './OtpQrCode'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Mail01Icon, LockPasswordIcon, Activity03Icon } from '@hugeicons/core-free-icons'
 
@@ -51,7 +52,6 @@ export function RegisterPage() {
   const [otpCode, setOtpCode] = useState('')
   const [userID, setUserID] = useState('')
   const [otpSecret, setOtpSecret] = useState('')
-  const [qrCodeURL, setQrCodeURL] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [passwordValid, setPasswordValid] = useState(false)
@@ -88,10 +88,12 @@ export function RegisterPage() {
         const lm = msg.toLowerCase()
         return lm.includes('whitelist') || lm.includes('capacity') || lm.includes('limit') || lm.includes('permission denied') || lm.includes('not on whitelist')
       }
-      if (result.success && result.userID) {
+      if (result.success && result.completed) {
+        return
+      }
+      if (result.success && result.userID && result.otpSecret) {
         setUserID(result.userID)
-        setOtpSecret(result.otpSecret || '')
-        setQrCodeURL(result.qrCodeURL || '')
+        setOtpSecret(result.otpSecret)
         setStep('setup-otp')
       } else {
         const msg = result.message || t('registrationFailed', language)
@@ -128,7 +130,7 @@ export function RegisterPage() {
   }
 
   const copyToClipboard = (text: string) => {
-    copyWithToast(text)
+    copyWithToast(text, t('copiedToClipboard', language), t('copyFailed', language))
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -415,16 +417,11 @@ export function RegisterPage() {
                     <p className="text-[10px] font-mono tracking-wider mb-5" style={{ color: 'rgba(255,255,255,0.4)' }}>
                       {language === 'zh' ? '完成两步验证配置' : 'COMPLETE 2FA CONFIGURATION'}
                     </p>
-                    {qrCodeURL ? (
-                      <div className="inline-block p-3 rounded-xl bg-white mx-auto mb-4">
-                        <img
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(`otpauth://totp/${encodeURIComponent(email)}?secret=${otpSecret}&issuer=EVA`)}`}
-                          alt="QR Code"
-                          className="w-36 h-36"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-36 h-36 mx-auto rounded-xl animate-pulse mb-4" style={{ background: 'rgba(255,255,255,0.06)' }} />
+                    <OtpQrCode email={email} secret={otpSecret} />
+                    {otpSecret ? null : (
+                      <p className="text-[11px] mb-4" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                        {language === 'zh' ? '正在生成二维码…' : 'Generating QR code…'}
+                      </p>
                     )}
                     <p className="text-[11px] font-mono mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>
                       {language === 'zh' ? '备用密钥' : 'BACKUP SECRET KEY'}

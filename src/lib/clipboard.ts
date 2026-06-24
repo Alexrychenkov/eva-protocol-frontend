@@ -1,14 +1,15 @@
 import { notify } from './notify'
 
-/**
- * 复制文本到剪贴板，并显示轻量提示。
- */
-export async function copyWithToast(text: string, successMsg = '已复制') {
+/** Copy text to the clipboard and show a toast. */
+export async function copyWithToast(
+  text: string,
+  successMsg = 'Copied to clipboard',
+  errorMsg = 'Copy failed',
+) {
   try {
     if (navigator?.clipboard?.writeText) {
       await navigator.clipboard.writeText(text)
     } else {
-      // 兼容降级：创建临时文本域执行复制
       const el = document.createElement('textarea')
       el.value = text
       el.style.position = 'fixed'
@@ -22,7 +23,7 @@ export async function copyWithToast(text: string, successMsg = '已复制') {
     return true
   } catch (err) {
     console.error('Clipboard copy failed:', err)
-    notify.error('复制失败')
+    notify.error(errorMsg)
     return false
   }
 }
