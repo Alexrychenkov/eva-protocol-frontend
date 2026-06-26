@@ -9,9 +9,7 @@ import { Eye, EyeOff, ArrowLeft, Shield, Copy, Check } from 'lucide-react'
 import PasswordChecklist from 'react-password-checklist'
 import { RegistrationDisabled } from './RegistrationDisabled'
 import { WhitelistFullPage } from './WhitelistFullPage'
-import Strands from './three/Strands'
 import LiquidMetalBar from './LiquidMetalBar'
-import { ErrorBoundary } from './ErrorBoundary'
 import { OtpQrCode } from './OtpQrCode'
 import { HugeiconsIcon } from '@hugeicons/react'
 import { Mail01Icon, LockPasswordIcon, Activity03Icon } from '@hugeicons/core-free-icons'
@@ -139,32 +137,6 @@ export function RegisterPage() {
 
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ background: '#04050A' }}>
-      {/* Strands WebGL background (ReactBits, OGL) — recolored to EVA dark-blue /
-          white / purple, wider & longer (low taper), centered on the form
-          (offset past the 500px poster panel on desktop). */}
-      <ErrorBoundary name="strands" silent>
-        <div className="fixed inset-0 z-0 lg:left-[500px] pointer-events-none">
-          <Strands
-            colors={['#1d3fd1', '#ffffff', '#8b3dff']}
-            count={5}
-            speed={0.26}
-            taper={1.2}
-            thickness={0.72}
-            glow={2.0}
-            amplitude={1.1}
-            waviness={1.05}
-            intensity={0.5}
-            saturation={1.5}
-            scale={1.7}
-            opacity={0.8}
-            breath={0.16}
-            breathSpeed={0.8}
-            mouseStrength={1}
-            maxDpr={1}
-          />
-        </div>
-      </ErrorBoundary>
-
       {/* ── Left poster panel — fixed full-height overlay; portada image bg + headline
           on a legibility scrim + animated glowing right edge (/public/login-poster.png). ── */}
       <aside
